@@ -23,5 +23,25 @@ namespace Sistema_gestion_coderhouse.Controllers
                 return Problem(ex.Message);
             }
         }
+        [HttpDelete]
+        public ActionResult Delete([FromBody] int id)
+        {
+            try
+            {
+                bool deletedRows = repository.deleteUser(id);
+                if (deletedRows)
+                {
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
     }
 }

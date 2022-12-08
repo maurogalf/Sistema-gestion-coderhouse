@@ -1,4 +1,5 @@
 ﻿using Sistema_gestion_coderhouse.Models;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace Sistema_gestion_coderhouse.Repositories
@@ -59,6 +60,29 @@ namespace Sistema_gestion_coderhouse.Repositories
                 throw;
             }
             return users;
+        }
+        public bool deleteUser(int id)
+        {
+            if (conection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                int afectedRows = 0;
+                using (SqlCommand cmd = new SqlCommand("DELETE FROM Usuario WHERE Id=@id", conection))
+                {
+                    conection.Open();
+                    cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = id });
+                    afectedRows = cmd.ExecuteNonQuery();
+                    return afectedRows > 0;
+                }
+            }
+            catch
+            {
+
+            }
+            return false;
         }
     }
 }

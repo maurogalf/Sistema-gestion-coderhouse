@@ -11,6 +11,7 @@ namespace Sistema_gestion_coderhouse.Controllers
     {
         private ProductRepository repository = new ProductRepository();
         [HttpGet]
+        // TRAER TODOS LOS PRODUCTOS
         public ActionResult Get()
         {
             try
@@ -25,6 +26,7 @@ namespace Sistema_gestion_coderhouse.Controllers
             }
         }
         [HttpGet("{id}")]
+        // TRAER PRODUCTOS POR ID
         public ActionResult<Product> Get(int id)
         {
             try
@@ -45,8 +47,8 @@ namespace Sistema_gestion_coderhouse.Controllers
                 return Problem(ex.Message);
             }
         }
-
         [HttpPost]
+        // CREAR PRODUCTO
         public ActionResult Post([FromBody] Product product)
         {
             try
@@ -59,19 +61,20 @@ namespace Sistema_gestion_coderhouse.Controllers
                 return Problem(ex.Message);
             }
         }
-        [HttpDelete]
-        public ActionResult Delete([FromBody] int id)
+        [HttpDelete("{id}")]
+        // ELIMINAR PRODUCTO
+        public ActionResult Delete(int id)
         {
             try
             {
                 bool deletedRows = repository.deleteProduct(id);
                 if (deletedRows)
                 {
-                    return Ok();
+                    return Ok("Product deleted succesfully.");
                 }
                 else
                 {
-                    return NotFound();
+                    return NotFound($"Product with ID {id} does not exist.");
                 }
             }
             catch (Exception ex)
@@ -79,6 +82,26 @@ namespace Sistema_gestion_coderhouse.Controllers
                 return Problem(ex.Message);
             }
         }
-
+        [HttpPut("{id}")]
+        // ACTUALIZAR PRODUCTO
+        public ActionResult<Product> Put(int id, [FromBody] Product updatedProduct)
+        {
+            try
+            {
+                Product? product = repository.updateProduct(id, updatedProduct);
+                if (product != null)
+                {
+                    return Ok(product);
+                }
+                else
+                {
+                    return NotFound($"Product with id {id} does not exist.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
     }
 }

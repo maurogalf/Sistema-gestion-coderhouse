@@ -40,7 +40,6 @@ namespace Sistema_gestion_coderhouse.Repositories
                         {
                             while (reader.Read())
                             {
-                                /*int id, string name, string lastName, string userName, string password, string email*/
                                 User user = new User();
                                 user.Id = int.Parse(reader["Id"].ToString());
                                 user.Name = reader["Nombre"].ToString();
@@ -53,13 +52,100 @@ namespace Sistema_gestion_coderhouse.Repositories
                         }
                     }
                 }
-                conection.Close();
             }
             catch
             {
                 throw;
             }
+            finally
+            {
+                conection.Close();
+            }
             return users;
+        }
+        public User? getUserByUserName(string username)
+        {
+            if (conection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Usuario WHERE NombreUsuario=@username", conection))
+                {
+                    conection.Open();
+                    cmd.Parameters.Add(new SqlParameter("username", SqlDbType.VarChar) { Value = username });
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            User user = new User();
+                            user.Id = int.Parse(reader["Id"].ToString());
+                            user.Name = reader["Nombre"].ToString();
+                            user.LastName = reader["Apellido"].ToString();
+                            user.UserName = reader["NombreUsuario"].ToString();
+                            user.Password = reader["Contraseña"].ToString();
+                            user.Email = reader["Mail"].ToString();
+                            return user;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conection.Close();
+            }
+        }
+        public User? getUserById(int id)
+        {
+            if (conection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Usuario WHERE Id=@id", conection))
+                {
+                    conection.Open();
+                    cmd.Parameters.Add(new SqlParameter("id", SqlDbType.VarChar) { Value = id });
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            User user = new User();
+                            user.Id = int.Parse(reader["Id"].ToString());
+                            user.Name = reader["Nombre"].ToString();
+                            user.LastName = reader["Apellido"].ToString();
+                            user.UserName = reader["NombreUsuario"].ToString();
+                            user.Password = reader["Contraseña"].ToString();
+                            user.Email = reader["Mail"].ToString();
+                            return user;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conection.Close();
+            }
         }
         public bool deleteUser(int id)
         {
@@ -80,9 +166,123 @@ namespace Sistema_gestion_coderhouse.Repositories
             }
             catch
             {
-
+                throw;
             }
-            return false;
+            finally
+            {
+                conection.Close();
+            }
+        }
+        public void createUser(User user)
+        {
+            if (conection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                User? existingUser = this.getUserByUserName(user.UserName);
+                if (existingUser == null)
+                {
+                    using (SqlCommand cmd = new SqlCommand("INSERT INTO Usuario(Nombre, Apellido, NombreUsuario, Contraseña, Mail)" +
+                        "VALUES(@nombre, @apellido, @nombreUsuario, @contraseña, @mail)", conection))
+                    {
+                        conection.Open();
+                        cmd.Parameters.Add(new SqlParameter("Nombre", SqlDbType.VarChar) { Value = user.Name });
+                        cmd.Parameters.Add(new SqlParameter("Apellido", SqlDbType.VarChar) { Value = user.LastName });
+                        cmd.Parameters.Add(new SqlParameter("NombreUsuario", SqlDbType.VarChar) { Value = user.UserName});
+                        cmd.Parameters.Add(new SqlParameter("Contraseña", SqlDbType.VarChar) { Value = user.Password});
+                        cmd.Parameters.Add(new SqlParameter("Mail", SqlDbType.VarChar) { Value = user.Email});
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+                else
+                {
+                    throw new Exception("El username registrado ya se encuentra en uso.");
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conection.Close();
+            }
+        }
+        public bool login(string username, string password)
+        {
+            User? user = this.getUserByUserName(username);
+            if(password == null)
+            {
+                return false;
+            }
+            return user.Password == password;
+        }
+        public User? updateUser(int id, User updatedUser)
+        {
+            if(conection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                User? user = this.getUserById(id);
+                if(user == null)
+                {
+                    return null;
+                }
+                List<string> updatedFields = new List<string>();
+                if (user.Name != updatedUser.Name && !string.IsNullOrEmpty(updatedUser.Name))
+                {
+                    updatedFields.Add("Nombre = @nombre");
+                    user.Name = updatedUser.Name;
+                }
+                if (user.LastName != updatedUser.LastName && !string.IsNullOrEmpty(updatedUser.LastName))
+                {
+                    updatedFields.Add("Apellido = @apellido");
+                    user.LastName = updatedUser.LastName;
+                }
+                if (user.UserName != updatedUser.UserName && !string.IsNullOrEmpty(updatedUser.UserName))
+                {
+                    updatedFields.Add("NombreUsuario = @nombreUsuario");
+                    user.UserName = updatedUser.UserName;
+                }
+                if (user.Password != updatedUser.Password && !string.IsNullOrEmpty(updatedUser.Password))
+                {
+                    updatedFields.Add("Contraseña= @contraseña");
+                    user.Password = updatedUser.Password;
+                }
+                if (user.Email != updatedUser.Email && !string.IsNullOrEmpty(updatedUser.Email))
+                {
+                    updatedFields.Add("Mail = @mail");
+                    user.Email = updatedUser.Email;
+                }
+                if (updatedFields.Count() == 0)
+                {
+                    throw new Exception("No field to update.");
+                }
+                using (SqlCommand cmd = new SqlCommand($"UPDATE Usuario SET {String.Join(", ", updatedFields)} WHERE Id=@id", conection))
+                {
+                    cmd.Parameters.Add(new SqlParameter("nombre", SqlDbType.VarChar) { Value = user.Name });
+                    cmd.Parameters.Add(new SqlParameter("apellido", SqlDbType.VarChar) { Value = user.LastName });
+                    cmd.Parameters.Add(new SqlParameter("nombreUsuario", SqlDbType.VarChar) { Value = user.UserName });
+                    cmd.Parameters.Add(new SqlParameter("contraseña", SqlDbType.VarChar) { Value = user.Password});
+                    cmd.Parameters.Add(new SqlParameter("mail", SqlDbType.VarChar) { Value = user.Email });
+                    cmd.Parameters.Add(new SqlParameter("id", SqlDbType.Int) { Value = id });
+                    conection.Open();
+                    cmd.ExecuteNonQuery();
+                    return user;
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                conection.Close();
+            }
         }
     }
 }

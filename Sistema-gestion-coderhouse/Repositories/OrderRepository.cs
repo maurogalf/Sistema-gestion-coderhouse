@@ -2,11 +2,12 @@
 using System.Data;
 using System.Data.SqlClient;
 
+
 namespace Sistema_gestion_coderhouse.Repositories
 {
     public class OrderRepository
     {
-        private SqlConnection? conection;
+        private SqlConnection? connection;
         private String conectionString = "Server=sql.bsite.net\\MSSQL2016;" +
             "Database=maurogalf_;" +
             "User Id=maurogalf_;" +
@@ -15,7 +16,7 @@ namespace Sistema_gestion_coderhouse.Repositories
         {
             try
             {
-                conection = new SqlConnection(conectionString);
+                connection = new SqlConnection(conectionString);
             }
             catch
             {
@@ -25,15 +26,15 @@ namespace Sistema_gestion_coderhouse.Repositories
         public List<Order> listOrders()
         {
             List<Order> orders = new List<Order>();
-            if (conection == null)
+            if (connection == null)
             {
                 throw new Exception("Conection failed.");
             }
             try
             {
-                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Venta", conection))
+                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Venta", connection))
                 {
-                    conection.Open();
+                    connection.Open();
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.HasRows)
@@ -43,13 +44,13 @@ namespace Sistema_gestion_coderhouse.Repositories
                                 Order order = new Order();
                                 order.Id = int.Parse(reader["Id"].ToString());
                                 order.Coments= reader["Comentarios"].ToString();
-                                order.IdUser = reader["IdUsuario"].ToString();
+                                order.IdUser = int.Parse(reader["IdUsuario"].ToString());
                                 orders.Add(order);
                             }
                         }
                     }
                 }
-                conection.Close();
+                connection.Close();
             }
             catch
             {
@@ -57,18 +58,81 @@ namespace Sistema_gestion_coderhouse.Repositories
             }
             return orders;
         }
+        public void createOrder(Order order)
+        {
+            if (connection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand("INSERT INTO Venta(Comentarios, IdUsuario) VALUES(@comentarios, @idUsuario); SELECT @@Identity", connection))
+                {
+                    connection.Open();
+                    cmd.Parameters.Add(new SqlParameter("comentarios", SqlDbType.VarChar) { Value = order.Coments });
+                    cmd.Parameters.Add(new SqlParameter("idUsuario", SqlDbType.VarChar) { Value = order.IdUser });
+                    order.Id = int.Parse(cmd.ExecuteScalar().ToString()); 
+                    if (order.SoldProducts != null && order.SoldProducts.Count > 0)
+                    {
+                        foreach(SoldProduct soldProduct in order.SoldProducts)
+                        {
+                            soldProduct.IdOrder = order.Id;
+                            registSoldProduct(soldProduct);
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+        private SoldProduct registSoldProduct(SoldProduct soldProduct)
+        {
+            Product? product = ProductRepository.getSimpleProductById(soldProduct.IdProduct, connection);
+            if(product != null)
+            {
+                using (SqlCommand cmd = new SqlCommand("INSERT INTO ProductoVendido(Stock, IdProducto, IdVenta) VALUES(@stock, @idProducto, @idVenta); SELECT @@Identity;", connection))
+                {
+                    cmd.Parameters.Add(new SqlParameter("stock", SqlDbType.BigInt) { Value = soldProduct.Stock });
+                    cmd.Parameters.Add(new SqlParameter("idProducto", SqlDbType.Int) { Value = soldProduct.IdProduct });
+                    cmd.Parameters.Add(new SqlParameter("idVenta", SqlDbType.BigInt) { Value = soldProduct.IdOrder });
+                    soldProduct.Id = int.Parse(cmd.ExecuteScalar().ToString());
+                }
+                stockUpdate(product, soldProduct.Stock);
+            }
+            else
+                {
+                    throw new Exception("Producto no encontrado");
+                }
+                return soldProduct;
+        }
+
+        private void stockUpdate(Product product, int q)
+        {
+            using (SqlCommand cmd = new SqlCommand("UPDATE Producto SET stock = @stock WHERE id = @id", connection))
+            {
+                cmd.Parameters.Add(new SqlParameter("stock", SqlDbType.Int) { Value = product.Stock - q });
+                cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = product.Id });
+                cmd.ExecuteNonQuery();
+            }
+        }
         public bool deleteOrder(int id)
         {
-            if (conection == null)
+            if (connection == null)
             {
                 throw new Exception("Conection failed.");
             }
             try
             {
                 int afectedRows = 0;
-                using (SqlCommand cmd = new SqlCommand("DELETE FROM venta WHERE Id=@id", conection))
+                using (SqlCommand cmd = new SqlCommand("DELETE FROM venta WHERE Id=@id", connection))
                 {
-                    conection.Open();
+                    connection.Open();
                     cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = id });
                     afectedRows = cmd.ExecuteNonQuery();
                     return afectedRows > 0;

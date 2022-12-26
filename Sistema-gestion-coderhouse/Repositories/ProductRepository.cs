@@ -48,7 +48,10 @@ namespace Sistema_gestion_coderhouse.Repositories
             {
                 throw;
             }
-            conection.Close();
+            finally
+            {
+                conection.Close();
+            }
         }
         public List<Product> listProducts()
         {
@@ -72,15 +75,18 @@ namespace Sistema_gestion_coderhouse.Repositories
                                 products.Add(product);
                             }
                         }
+                        return products;
                     }
                 }
-                conection.Close();
             }
             catch
             {
                 throw;
             }
-            return products;
+            finally
+            {
+                conection.Close();
+            }
         }
 
         public Product? getProductById(int id)
@@ -109,7 +115,46 @@ namespace Sistema_gestion_coderhouse.Repositories
                         }
                     }
                 }
+            }
+            catch
+            {
+                throw;
+            }
+            finally
+            {
                 conection.Close();
+            }
+        }
+        public static Product? getSimpleProductById(int id, SqlConnection connection)
+        { 
+        if (connection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT Id, Stock FROM producto WHERE id = @id", connection))
+                {
+                    if (connection.State == ConnectionState.Closed) connection.Open();
+                    cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = id });
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            Product product = new Product()
+                            {
+                                Id = int.Parse(reader["Id"].ToString()),
+                                Stock = int.Parse(reader["Stock"].ToString())
+                            };
+                            return product;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
             }
             catch
             {
@@ -134,11 +179,79 @@ namespace Sistema_gestion_coderhouse.Repositories
                     return afectedRows > 0;
                 }
             }
+            catch 
+            {
+                throw;
+            }
+            finally
+            {
+                conection.Close();
+            }
+        }
+        public Product? updateProduct(int id, Product updatedProduct)
+        {
+            if (conection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                Product? product = this.getProductById(id);
+                if (product == null)
+                {
+                    return null;
+                }
+                List<string> updatedFields = new List<string>();
+                if (product.Description != updatedProduct.Description && !string.IsNullOrEmpty(updatedProduct.Description))
+                {
+                    updatedFields.Add("Descripciones = @descripciones");
+                    product.Description = updatedProduct.Description;
+                }
+                if (product.Cost != updatedProduct.Cost && updatedProduct.Cost > 0)
+                {
+                    updatedFields.Add("Costo = @costo");
+                    product.Cost = updatedProduct.Cost;
+                }
+                if (product.SalePrice != updatedProduct.SalePrice && updatedProduct.SalePrice > 0)
+                {
+                    updatedFields.Add("PrecioVenta = @precioventa");
+                    product.SalePrice = updatedProduct.SalePrice;
+                }
+                if (product.Stock != updatedProduct.Stock && updatedProduct.Stock > 0)
+                {
+                    updatedFields.Add("Stock= @stock");
+                    product.Stock = updatedProduct.Stock;
+                }
+                if (product.IdUser != updatedProduct.IdUser && !string.IsNullOrEmpty(updatedProduct.IdUser))
+                {
+                    updatedFields.Add("IdUsuario = @idusuario");
+                    product.IdUser = updatedProduct.IdUser;
+                }
+                if (updatedFields.Count() == 0)
+                {
+                    throw new Exception("No field to update.");
+                }
+                using (SqlCommand cmd = new SqlCommand($"UPDATE Producto SET {String.Join(", ", updatedFields)} WHERE Id=@id", conection))
+                {
+                    cmd.Parameters.Add(new SqlParameter("descripciones", SqlDbType.VarChar) { Value = product.Description });
+                    cmd.Parameters.Add(new SqlParameter("costo", SqlDbType.Float) { Value = product.Cost});
+                    cmd.Parameters.Add(new SqlParameter("precioventa", SqlDbType.Float) { Value = product.SalePrice});
+                    cmd.Parameters.Add(new SqlParameter("stock", SqlDbType.Int) { Value = product.Stock });
+                    cmd.Parameters.Add(new SqlParameter("idusuario", SqlDbType.BigInt) { Value = product.IdUser});
+                    cmd.Parameters.Add(new SqlParameter("id", SqlDbType.Int) { Value = id });
+                    conection.Open();
+                    cmd.ExecuteNonQuery();
+                    return product;
+                }
+            }
             catch
             {
-
+                throw;
             }
-            return false;
+            finally
+            {
+                conection.Close();
+            }
         }
 
         private Product GetProductFromReader(SqlDataReader reader)

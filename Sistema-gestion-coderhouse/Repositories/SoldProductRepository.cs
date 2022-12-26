@@ -47,15 +47,18 @@ namespace Sistema_gestion_coderhouse.Repositories
                                 soldProducts.Add(soldProduct);
                             }
                         }
+                        return soldProducts;
                     }
                 }
-                conection.Close();
             }
             catch
             {
                 throw;
             }
-            return soldProducts;
+            finally
+            {
+                conection.Close();
+            }
         }
     }
 }

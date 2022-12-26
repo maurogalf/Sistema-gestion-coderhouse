@@ -10,6 +10,20 @@ namespace Sistema_gestion_coderhouse.Controllers
     public class OrderController : Controller
     {
         private OrderRepository repository = new OrderRepository();
+        [HttpPost]
+        // CARGAR VENTA
+        public ActionResult Post([FromBody] Order order)
+        {
+            try
+            {
+                repository.createOrder(order);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
         [HttpGet]
         public IActionResult Get()
         {

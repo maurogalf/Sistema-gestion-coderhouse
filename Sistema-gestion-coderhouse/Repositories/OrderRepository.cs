@@ -1,4 +1,5 @@
-﻿using Sistema_gestion_coderhouse.Models;
+﻿using Microsoft.AspNetCore.Server.IIS.Core;
+using Sistema_gestion_coderhouse.Models;
 using System.Data;
 using System.Data.SqlClient;
 
@@ -23,18 +24,27 @@ namespace Sistema_gestion_coderhouse.Repositories
                 throw;
             }
         }
-        public List<Order> listOrders()
+        public List<Order> listOrders(int? id)
         {
-            List<Order> orders = new List<Order>();
             if (connection == null)
             {
                 throw new Exception("Conection failed.");
             }
             try
             {
-                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Venta", connection))
+                string query = "SELECT * FROM Venta";
+                if(id != null)
+                {
+                    query += $" WHERE Id=@id";
+                }
+                using (SqlCommand cmd = new SqlCommand(query , connection))
                 {
                     connection.Open();
+                    if(id !=null)
+                    {
+                        cmd.Parameters.Add(new SqlParameter("id", SqlDbType.Int) { Value = id});
+                    }
+                    List<Order> orders = new List<Order>();
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
                         if (reader.HasRows)
@@ -43,20 +53,73 @@ namespace Sistema_gestion_coderhouse.Repositories
                             {
                                 Order order = new Order();
                                 order.Id = int.Parse(reader["Id"].ToString());
-                                order.Coments= reader["Comentarios"].ToString();
+                                order.Coments = reader["Comentarios"].ToString();
                                 order.IdUser = int.Parse(reader["IdUsuario"].ToString());
                                 orders.Add(order);
                             }
                         }
                     }
+                    foreach(Order order in orders)
+                    {
+                        order.SoldProducts = getOrdersSoldProducts((int) order.Id);
+                    }
+                    return orders;
                 }
-                connection.Close();
             }
             catch
             {
                 throw;
             }
-            return orders;
+            finally
+            {
+                connection.Close();
+            }
+        }
+        private List<SoldProduct> getOrdersSoldProducts (int orderId)
+        {
+            try
+            {
+
+            List<SoldProduct> soldProducts = new List<SoldProduct>();
+            string query = "SELECT A.Id, A.IdProducto, A.Stock, B.Descripciones, B.PrecioVenta " +
+                "FROM ProductoVendido AS A " +
+                "INNER JOIN Producto AS B " +
+                "ON A.IdProducto = B.Id " +
+                "WHERE A.IdVenta = @id";
+            using (SqlCommand cmd = new SqlCommand(query, connection))
+            {
+                cmd.Parameters.Add(new SqlParameter("id", SqlDbType.Int) { Value = orderId });
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    List<Order> orders = new List<Order>();
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            SoldProduct soldProduct = new SoldProduct()
+                            {
+                                Id = int.Parse(reader["Id"].ToString()),
+                                IdProduct = int.Parse(reader["IdProducto"].ToString()),
+                                Stock = int.Parse(reader["Stock"].ToString()),
+                                IdOrder = orderId,
+                                Product= new Product()
+                                {
+                                    Description = reader["Descripciones"].ToString(),
+                                    SalePrice = decimal.Parse(reader["PrecioVenta"].ToString())
+                                }
+
+                            };
+                            soldProducts.Add(soldProduct);
+                        }
+                    }
+                    return soldProducts;
+                }
+            }
+            }
+            catch
+            {
+                throw;
+            }
         }
         public void createOrder(Order order)
         {

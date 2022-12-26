@@ -25,19 +25,35 @@ namespace Sistema_gestion_coderhouse.Controllers
             }
         }
         [HttpGet]
+        // TRAE VENTA
         public IActionResult Get()
         {
             try
             {
-                List<Order> list = repository.listOrders();
+                List<Order> list = repository.listOrders(null);
                 return Ok(list);
             }
-            catch(Exception ex)
+            catch (Exception ex)
+            {
+                return Problem(ex.Message);
+            }
+        }
+        [HttpGet("{id}")]
+        // TRAE VENTA POR ID
+        public IActionResult Get(int id)
+        {
+            try
+            {
+                List<Order> list = repository.listOrders(id);
+                return Ok(list);
+            }
+            catch (Exception ex)
             {
                 return Problem(ex.Message);
             }
         }
         [HttpDelete]
+        // ELIMINAR VENTA
         public ActionResult Delete([FromBody]int id)
         {
             try

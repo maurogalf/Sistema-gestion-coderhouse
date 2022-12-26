@@ -52,20 +52,20 @@ namespace Sistema_gestion_coderhouse.Controllers
                 return Problem(ex.Message);
             }
         }
-        [HttpDelete]
+        [HttpDelete("{id}")]
         // ELIMINAR VENTA
-        public ActionResult Delete([FromBody]int id)
+        public ActionResult Delete(int id)
         {
             try
             {
-                bool deletedRows = repository.deleteOrder(id);
-                if (deletedRows)
+                int deletedRows = repository.deleteOrder(id);
+                if (deletedRows > 0)
                 {
-                    return Ok();
+                    return Ok($"Se elimino correctamente la venta con ID:{id} y {deletedRows} lineas de la tabla ProductoVendido.");
                 }
                 else
                 {
-                    return NotFound();
+                    return NotFound($"No se encontraron ventas para el ID:{id}.");
                 }
             }
             catch (Exception ex)

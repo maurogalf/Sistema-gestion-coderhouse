@@ -184,7 +184,7 @@ namespace Sistema_gestion_coderhouse.Repositories
                 cmd.ExecuteNonQuery();
             }
         }
-        public bool deleteOrder(int id)
+        public int deleteOrder(int id)
         {
             if (connection == null)
             {
@@ -192,20 +192,34 @@ namespace Sistema_gestion_coderhouse.Repositories
             }
             try
             {
+                connection.Open();
                 int afectedRows = 0;
-                using (SqlCommand cmd = new SqlCommand("DELETE FROM venta WHERE Id=@id", connection))
+                int deleteRows = 0;
+                deleteRows = deleteSoldProductsById(id);
+                using (SqlCommand cmd = new SqlCommand("DELETE FROM Venta WHERE Id=@id", connection))
                 {
-                    connection.Open();
                     cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = id });
                     afectedRows = cmd.ExecuteNonQuery();
-                    return afectedRows > 0;
                 }
+                return deleteRows;
             }
             catch
             {
-
+                throw;
             }
-            return false;
+            finally
+            {
+                connection.Close();
+            }
+        }
+
+        private int deleteSoldProductsById(int id)
+        {
+            using (SqlCommand cmd = new SqlCommand("DELETE FROM ProductoVendido WHERE IdVenta=@id", connection))
+            {
+                cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = id });
+                return cmd.ExecuteNonQuery();
+            }
         }
     }
 }

@@ -6,7 +6,7 @@
         public int IdProduct { get; set; }
         public int Stock { get; set; }
         public int? IdOrder { get; set; }
-        public Product Product { get; set; }
+        public Product? Product { get; set; }
 
         public SoldProduct()
         {

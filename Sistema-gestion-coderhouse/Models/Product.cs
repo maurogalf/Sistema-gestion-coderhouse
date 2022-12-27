@@ -12,6 +12,11 @@
         public Product()
         { 
         }
+        public Product(string description, decimal salePrice)
+        {
+            this.Description = description;
+            this.SalePrice = salePrice;
+        }
         public Product(int id, string description, decimal cost, decimal salePrice, int stock, string idUser)
         {
             this.Id = id;

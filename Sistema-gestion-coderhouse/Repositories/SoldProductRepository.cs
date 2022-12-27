@@ -1,4 +1,5 @@
 ﻿using Sistema_gestion_coderhouse.Models;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace Sistema_gestion_coderhouse.Repositories
@@ -47,8 +48,12 @@ namespace Sistema_gestion_coderhouse.Repositories
                                 soldProducts.Add(soldProduct);
                             }
                         }
-                        return soldProducts;
                     }
+                    foreach (SoldProduct soldproduct in soldProducts)
+                    {
+                        soldproduct.Product = ProductRepository.getSimpleProductById(soldproduct.IdProduct, conection);
+                    }
+                    return soldProducts;
                 }
             }
             catch
@@ -60,5 +65,6 @@ namespace Sistema_gestion_coderhouse.Repositories
                 conection.Close();
             }
         }
+
     }
 }

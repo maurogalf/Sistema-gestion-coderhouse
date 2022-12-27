@@ -198,7 +198,7 @@ namespace Sistema_gestion_coderhouse.Repositories
                 }
                 else
                 {
-                    throw new Exception("El username registrado ya se encuentra en uso.");
+                    throw new Exception($"Username {user.UserName} is in use already. Choose another username and try again.");
                 }
             }
             catch

@@ -105,7 +105,7 @@ namespace Sistema_gestion_coderhouse.Controllers
             try
             {
                 repository.createUser(user);
-                return Ok();
+                return Ok($"User with username {user.UserName} was created successfully.");
             }
             catch (Exception ex)
             {
@@ -118,7 +118,7 @@ namespace Sistema_gestion_coderhouse.Controllers
         {
             try
             {
-                User user = repository.updateUser(id, updatedUser);
+                User? user = repository.updateUser(id, updatedUser);
                 if (user != null)
                 {
                     return Ok(user);

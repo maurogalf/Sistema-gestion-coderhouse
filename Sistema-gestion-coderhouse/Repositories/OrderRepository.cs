@@ -61,7 +61,7 @@ namespace Sistema_gestion_coderhouse.Repositories
                     }
                     foreach(Order order in orders)
                     {
-                        order.SoldProducts = getOrdersSoldProducts((int) order.Id);
+                        order.SoldProducts = getOrdersSoldProducts((int)order.Id);
                     }
                     return orders;
                 }
@@ -79,7 +79,6 @@ namespace Sistema_gestion_coderhouse.Repositories
         {
             try
             {
-
             List<SoldProduct> soldProducts = new List<SoldProduct>();
             string query = "SELECT A.Id, A.IdProducto, A.Stock, B.Descripciones, B.PrecioVenta " +
                 "FROM ProductoVendido AS A " +
@@ -156,7 +155,7 @@ namespace Sistema_gestion_coderhouse.Repositories
         }
         private SoldProduct registSoldProduct(SoldProduct soldProduct)
         {
-            Product? product = ProductRepository.getSimpleProductById(soldProduct.IdProduct, connection);
+            Product? product = ProductRepository.getStockProductById(soldProduct.IdProduct, connection);
             if(product != null)
             {
                 using (SqlCommand cmd = new SqlCommand("INSERT INTO ProductoVendido(Stock, IdProducto, IdVenta) VALUES(@stock, @idProducto, @idVenta); SELECT @@Identity;", connection))

@@ -125,7 +125,7 @@ namespace Sistema_gestion_coderhouse.Repositories
                 conection.Close();
             }
         }
-        public static Product? getSimpleProductById(int id, SqlConnection connection)
+        public static Product? getStockProductById(int id, SqlConnection connection)
         { 
         if (connection == null)
             {
@@ -161,6 +161,43 @@ namespace Sistema_gestion_coderhouse.Repositories
                 throw;
             }
         }
+        public static Product? getSimpleProductById(int id, SqlConnection connection)
+        {
+            if (connection == null)
+            {
+                throw new Exception("Conection failed.");
+            }
+            try
+            {
+                using (SqlCommand cmd = new SqlCommand("SELECT Descripciones, PrecioVenta FROM producto WHERE id = @id", connection))
+                {
+                    if (connection.State == ConnectionState.Closed) connection.Open();
+                    cmd.Parameters.Add(new SqlParameter("id", SqlDbType.BigInt) { Value = id });
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            reader.Read();
+                            Product product = new Product(reader["Descripciones"].ToString(), decimal.Parse(reader["PrecioVenta"].ToString()));
+                            //{
+                            //    Description = reader["Descripciones"].ToString(),
+                            //    SalePrice = decimal.Parse(reader["PrecioVenta"].ToString())
+                            //};
+                            return product;
+                        }
+                        else
+                        {
+                            return null;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                throw;
+            }
+        }
+
 
         public bool deleteProduct(int id)
         {

@@ -75,7 +75,7 @@ namespace Sistema_gestion_coderhouse.Repositories
                 connection.Close();
             }
         }
-        private List<SoldProduct> getOrdersSoldProducts (int orderId)
+        private List<SoldProduct> getOrdersSoldProducts (int? orderId)
         {
             try
             {

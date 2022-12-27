@@ -63,7 +63,7 @@ namespace Sistema_gestion_coderhouse.Repositories
             }
             return users;
         }
-        public User? getUserByUserName(string username)
+        public User? getUserByUserName(string? username)
         {
             if (conection == null)
             {
@@ -213,7 +213,7 @@ namespace Sistema_gestion_coderhouse.Repositories
         public bool login(string username, string password)
         {
             User? user = this.getUserByUserName(username);
-            if(password == null)
+            if(password == null || user == null)
             {
                 return false;
             }

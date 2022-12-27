@@ -125,7 +125,7 @@ namespace Sistema_gestion_coderhouse.Repositories
                 conection.Close();
             }
         }
-        public static Product? getStockProductById(int id, SqlConnection connection)
+        public static Product? getStockProductById(int id, SqlConnection? connection)
         { 
         if (connection == null)
             {
@@ -179,10 +179,6 @@ namespace Sistema_gestion_coderhouse.Repositories
                         {
                             reader.Read();
                             Product product = new Product(reader["Descripciones"].ToString(), decimal.Parse(reader["PrecioVenta"].ToString()));
-                            //{
-                            //    Description = reader["Descripciones"].ToString(),
-                            //    SalePrice = decimal.Parse(reader["PrecioVenta"].ToString())
-                            //};
                             return product;
                         }
                         else
